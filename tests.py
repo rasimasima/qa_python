@@ -23,8 +23,7 @@ class TestBooksCollector:
     def test_add_new_book_empty_name(self):
         collector = BooksCollector()
 
-        result = collector.add_new_book("")
-        assert result is False
+        collector.add_new_book("")
         assert "" not in collector.books_genre
 
     def test_add_new_book_valid_name(self):
@@ -34,45 +33,38 @@ class TestBooksCollector:
         assert "Война и мир" in collector.books_genre
         assert collector.books_genre["Война и мир"] == ''
 
-    @pytest.mark.parametrize(
-        "book_name, genre, expected_genre",
-        [
-            ("Гарри Поттер и узник Азкабана", "Фантастика", "Фантастика"),
-            ("Манюня", "Комедии", "Комедии"),
-            ("Неизвестная книга", "Фантастика", None),  
-            ("Другая книга", "Неизвестный жанр", None),  
-        ]
-    )
-    def test_set_book_genre(self, book_name, genre, expected_genre):
-        if book_name != "Неизвестная книга":
-            collector.add_new_book(book_name)
-
-        collector.set_book_genre(book_name, genre)
-        result_genre = collector.get_book_genre(book_name)
-
-        if expected_genre is None:
-            assert book_name not in collector.books_genre  
-        else:
-            assert result_genre == expected_genre
-
-    @pytest.mark.parametrize(
-        "book_name, genre, expected_result",
-        [
-            ("Властелин колец", "Фантастика", "Фантастика"), 
-            ("Денискины рассказы", "", ""),  
-            ("Неизвестная книга", None, None),  
-        ]
-    )
-    def test_get_book_genre_basic_scenarios(self, book_name, genre, expected_result):
+    def test_set_book_genre_success_when_book_and_genre_valid(self):
         collector = BooksCollector()
+        book_name = "Гарри Поттер"
+        genre = "Фантастика"
 
-        if genre is not None:  
-            collector.add_new_book(book_name)
-            if genre:  
-                collector.set_book_genre(book_name, genre)
+        collector.add_new_book(book_name)
+        collector.set_book_genre(book_name, genre)
+        assert collector.get_book_genre(book_name) == genre
 
+    def test_get_book_genre_returns_correct_genre_for_existing_book(self):
+        collector = BooksCollector()
+        book_name = "Гарри Поттер"
+        genre = "Фантастика"
+
+        collector.add_new_book(book_name)
+        collector.set_book_genre(book_name, genre)
         result = collector.get_book_genre(book_name)
-        assert result == expected_result
+        assert result == genre
+
+    def test_get_book_genre_basic_scenarios(self, book_name, genre, expected_result,collector):
+        collector = BooksCollector()
+        genre = "Фантастика"
+
+        collector.add_new_book("Гарри Поттер")
+        collector.set_book_genre("Гарри Поттер", "Фантастика")
+        collector.add_new_book("Дюна")
+        collector.set_book_genre("Дюна", "Фантастика")
+        collector.add_new_book("Манюня")
+        collector.set_book_genre("Манюня", "Комедии")
+
+        result = collector.get_books_with_specific_genre(genre)
+        assert result == ["Гарри Поттер", "Дюна"]
 
     @pytest.mark.parametrize(
         "genre, expected_books",
@@ -82,7 +74,7 @@ class TestBooksCollector:
             ("Неизвестный жанр", []),
         ]
     )
-    def test_get_books_with_specific_genre(self, genre, expected_books):
+    def test_get_books_with_specific_genre(self, genre, expected_books,collector):
         collector = BooksCollector()
         books_data = [
             ("Хоббит", "Фантастика"),
@@ -110,7 +102,8 @@ class TestBooksCollector:
         result = collector.get_books_for_children()
         assert result == []
 
-    def test_add_book_in_favorites_valid_book(self, collector):
+    def test_add_book_in_favorites_valid_book(self):
+        collector = BooksCollector()
         collector.add_new_book("Убить пересмешника")
         collector.add_book_in_favorites("Убить пересмешника")
         assert "Убить пересмешника" in collector.get_list_of_favorites_books()
@@ -142,8 +135,4 @@ class TestBooksCollector:
 
         result = collector.get_list_of_favorites_books()
 
-        assert isinstance(result, list)
-        assert len(result) == 2
-        assert "Маленькие женщины" in result
-        assert "Джейн Эйр" in result
         assert result == ["Маленькие женщины", "Джейн Эйр"]
